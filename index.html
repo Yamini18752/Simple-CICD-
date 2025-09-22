@@ -1,27 +1,262 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mood Journal</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DevOps Life Cycle — Visual Diagram</title>
+  <style>
+    :root{
+      --bg:#0f1724;
+      --card:#0b1220;
+      --accent:#7c3aed; /* purple */
+      --accent-2:#06b6d4; /* teal */
+      --muted:#9aa4b2;
+      --glass: rgba(255,255,255,0.04);
+    }
+    *{box-sizing:border-box}
+    body{font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial; margin:0; background:linear-gradient(180deg,var(--bg),#071023); color:#e6eef6; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:28px}
+
+    .frame{width:100%; max-width:1100px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:14px; padding:22px; box-shadow: 0 10px 30px rgba(2,6,23,0.6);}
+    header{display:flex; align-items:center; gap:16px}
+    header h1{margin:0; font-size:20px}
+    header p{margin:0; color:var(--muted); font-size:13px}
+
+    .layout{display:grid; grid-template-columns: 1fr 340px; gap:18px; margin-top:18px}
+    .canvas{background:var(--card); border-radius:12px; padding:18px; position:relative; overflow:hidden; min-height:520px}
+    .info{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:12px; padding:18px;}
+
+    /* SVG stage styling */
+    svg{width:100%; height:100%; display:block}
+    .stage{cursor:pointer; transition:transform .18s ease, filter .18s ease}
+    .stage:hover{transform:scale(1.05)}
+    .stage circle{filter: drop-shadow(0 6px 20px rgba(0,0,0,0.6));}
+    .label{font-size:13px; fill:#e6eef6; pointer-events:none}
+
+    /* arrows */
+    .arrow{stroke:#9fb8ff; stroke-width:2; fill:none; marker-end:url(#arrowhead)}
+
+    /* active styling */
+    .stage.active circle{stroke: #fff; stroke-width:2}
+    .stage.active .stage-fill{fill:var(--accent)}
+    .stage.active .label{font-weight:600}
+
+    /* side panel */
+    .stage-title{font-size:18px; margin:0}
+    .stage-desc{color:var(--muted); margin-top:8px; font-size:14px; line-height:1.5}
+    .stage-list{display:grid; gap:8px; margin-top:12px}
+
+    .badge{display:inline-block; background:var(--glass); color:var(--muted); padding:6px 10px; border-radius:999px; font-size:12px}
+
+    .controls{display:flex; gap:8px; margin-top:14px}
+    button{background:transparent; border:1px solid rgba(255,255,255,0.06); color:var(--muted); padding:8px 10px; border-radius:8px; cursor:pointer}
+    button.primary{background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:#021026; border:none}
+
+    footer{margin-top:14px; color:var(--muted); font-size:13px}
+
+    /* responsive */
+    @media (max-width:900px){ .layout{grid-template-columns: 1fr; } .info{order:2} }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h1> Mood Journal</h1>
-    <input type="text" id="note" placeholder="Write your note...">
-    <select id="mood">
-      <option value="happy"> Happy</option>
-      <option value="sad"> Sad</option>
-      <option value="stressed"> Stressed</option>
-      <option value="excited">Excited</option>
-    </select>
-    <button onclick="addEntry()">Add Entry</button>
-    
-    <h2>Your Journal</h2>
-    <ul id="journal"></ul>
+  <div class="frame">
+    <header>
+      <div style="width:52px;height:52px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:700">DO</div>
+      <div>
+        <h1>DevOps Life Cycle — Interactive Diagram</h1>
+        <p>Click any stage to read an explanation. The cycle follows: Plan → Develop → Build → Test → Release → Deploy → Operate → Monitor.</p>
+      </div>
+    </header>
+
+    <div class="layout">
+      <div class="canvas" role="img" aria-label="Diagram showing circular DevOps lifecycle with stages plan, develop, build, test, release, deploy, operate, monitor">
+        <!-- SVG diagram -->
+        <svg viewBox="0 0 1000 520" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <linearGradient id="g1" x1="0" x2="1">
+              <stop offset="0" stop-color="#7c3aed" />
+              <stop offset="1" stop-color="#06b6d4" />
+            </linearGradient>
+            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#9fb8ff" />
+            </marker>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
+          <!-- invisible center for circle positioning -->
+          <g transform="translate(500,260)">
+            <!-- positions for 8 stages around circle -->
+            <!-- We'll place each stage using JS but also include static positions here for clarity -->
+            <!-- Background faint ring -->
+            <circle r="210" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="14"></circle>
+
+            <!-- arrows connecting stages (curved) - drawn as paths -->
+            <!-- We'll use 8 paths with arrow markers -->
+
+            <!-- STAGE: Plan (top) -->
+            <g class="stage" id="plan" data-key="Plan" transform="translate(0,-270)" tabindex="0">
+              <circle class="stage-fill" r="44" fill="#0b1220" stroke="rgba(255,255,255,0.04)" />
+              <text class="label" text-anchor="middle" dy="6">Plan</text>
+            </g>
+
+            <!-- Develop (top-right) -->
+            <g class="stage" id="develop" data-key="Develop" transform="translate(190,-165)" tabindex="0">
+              <rect x="-50" y="-38" width="100" height="76" rx="12" ry="12" class="stage-fill" fill="#071429" stroke="rgba(255,255,255,0.04)" />
+              <text class="label" text-anchor="middle" dy="6">Develop</text>
+            </g>
+
+            <!-- Build (right) -->
+            <g class="stage" id="build" data-key="Build" transform="translate(260,0)" tabindex="0">
+              <polygon points="-44,0 0,-50 44,0 0,50" class="stage-fill" fill="#071429" stroke="rgba(255,255,255,0.04)" />
+              <text class="label" text-anchor="middle" dy="6">Build</text>
+            </g>
+
+            <!-- Test (bottom-right) -->
+            <g class="stage" id="test" data-key="Test" transform="translate(190,165)" tabindex="0">
+              <ellipse rx="64" ry="36" class="stage-fill" fill="#071429" stroke="rgba(255,255,255,0.04)" />
+              <text class="label" text-anchor="middle" dy="6">Test</text>
+            </g>
+
+            <!-- Release (bottom) -->
+            <g class="stage" id="release" data-key="Release" transform="translate(0,270)" tabindex="0">
+              <circle class="stage-fill" r="44" fill="#071429" stroke="rgba(255,255,255,0.04)" />
+              <text class="label" text-anchor="middle" dy="6">Release</text>
+            </g>
+
+            <!-- Deploy (bottom-left) -->
+            <g class="stage" id="deploy" data-key="Deploy" transform="translate(-190,165)" tabindex="0">
+              <rect x="-48" y="-32" width="96" height="64" rx="10" ry="10" class="stage-fill" fill="#071429" stroke="rgba(255,255,255,0.04)" />
+              <text class="label" text-anchor="middle" dy="6">Deploy</text>
+            </g>
+
+            <!-- Operate (left) -->
+            <g class="stage" id="operate" data-key="Operate" transform="translate(-260,0)" tabindex="0">
+              <path d="M-44 -30 Q-70 0 -44 30 L44 30 Q70 0 44 -30 Z" class="stage-fill" fill="#071429" stroke="rgba(255,255,255,0.04)" />
+              <text class="label" text-anchor="middle" dy="6">Operate</text>
+            </g>
+
+            <!-- Monitor (top-left) -->
+            <g class="stage" id="monitor" data-key="Monitor" transform="translate(-190,-165)" tabindex="0">
+              <rect x="-34" y="-34" width="68" height="68" rx="12" ry="12" class="stage-fill" fill="#071429" stroke="rgba(255,255,255,0.04)" />
+              <text class="label" text-anchor="middle" dy="6">Monitor</text>
+            </g>
+
+            <!-- curved arrows drawn manually between centers -->
+            <path class="arrow" d="M0,-226 C90,-226 150,-190 190,-165" marker-end="url(#arrowhead)"/>
+            <path class="arrow" d="M230,-135 C260,-100 270,-40 268,0" marker-end="url(#arrowhead)"/>
+            <path class="arrow" d="M230,135 C200,200 140,240 0,240" marker-end="url(#arrowhead)"/>
+            <path class="arrow" d="M-20,240 C-160,240 -200,200 -230,145" marker-end="url(#arrowhead)"/>
+            <path class="arrow" d="M-270,120 C-300,70 -280,10 -268,0" marker-end="url(#arrowhead)"/>
+            <path class="arrow" d="M-230,-120 C-190,-200 -120,-235 0,-235" marker-end="url(#arrowhead)"/>
+            <path class="arrow" d="M-10,-235 C50,-235 110,-220 190,-165" stroke-dasharray="6 6" marker-end="url(#arrowhead)"/>
+
+            <!-- center title -->
+            <g>
+              <circle r="86" fill="url(#g1)" opacity="0.06" />
+              <text x="0" y="-6" text-anchor="middle" fill="#dff3ff" style="font-weight:700;font-size:20px">DevOps</text>
+              <text x="0" y="18" text-anchor="middle" fill="#bcd8ff" style="font-size:12px">Continuous & Collaborative</text>
+            </g>
+          </g>
+        </svg>
+
+        <!-- small legend bottom-right -->
+        <div style="position:absolute; right:18px; bottom:18px; background:rgba(1,8,15,0.6); padding:10px; border-radius:10px">
+          <div style="font-size:13px; color:var(--muted)">Tip: Click a stage to view details</div>
+        </div>
+      </div>
+
+      <aside class="info" aria-live="polite">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div class="badge">8 Stages</div>
+            <h2 style="margin:8px 0 0 0" class="stage-title" id="side-title">Select a stage</h2>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:12px;color:var(--muted)">View</div>
+            <div style="font-weight:700;font-size:18px">Cycle</div>
+          </div>
+        </div>
+
+        <div class="stage-desc" id="side-desc">Click any node in the diagram to read a concise explanation of that stage. You can also use keyboard (Tab + Enter) to select stages.</div>
+
+        <div class="stage-list" id="details">
+          <!-- details items injected by JS -->
+        </div>
+
+        <div class="controls">
+          <button id="reset">Reset</button>
+          <button class="primary" id="highlight">Highlight Flow</button>
+        </div>
+
+        <footer>
+          <small>Designed for visually explaining the DevOps lifecycle. Good for slides and quick demos.</small>
+        </footer>
+      </aside>
+    </div>
   </div>
-  <script src="script.js"></script>
+
+  <script>
+    const STAGES = [
+      {id:'plan', title:'Plan', desc:'Define requirements, roadmap, and priorities. Involves stakeholders, backlog grooming, and creating user stories. Planning aligns product goals with technical delivery.'},
+      {id:'develop', title:'Develop', desc:'Engineers write code, implement features, and collaborate via version control. Includes code reviews and pairing to ensure quality and knowledge sharing.'},
+      {id:'build', title:'Build', desc:'Compile and package the application into artifacts (binaries, containers). Automated builds ensure the codebase can be reproducibly created.'},
+      {id:'test', title:'Test', desc:'Automated and manual testing (unit, integration, E2E) to validate correctness, performance and security before release.'},
+      {id:'release', title:'Release', desc:'Prepare artifacts for production: tagging, creating release notes, and gating the artifact for deployment. Release pipelines ensure safe delivery.'},
+      {id:'deploy', title:'Deploy', desc:'Deploy artifacts to target environments (staging, production). Often automated with rolling updates, blue/green or canary strategies.'},
+      {id:'operate', title:'Operate', desc:'Run and manage the application in production — handle scaling, backups, incident response, and routine maintenance.'},
+      {id:'monitor', title:'Monitor', desc:'Collect metrics, logs, and traces to observe system health. Feedback from monitoring drives improvements and informs future planning.'}
+    ];
+
+    const detailsEl = document.getElementById('details');
+    const sideTitle = document.getElementById('side-title');
+    const sideDesc = document.getElementById('side-desc');
+
+    function renderList(){
+      detailsEl.innerHTML = STAGES.map(s=>`<div style="background:rgba(255,255,255,0.02); padding:10px; border-radius:8px"><strong>${s.title}</strong><div style="color:var(--muted);margin-top:6px;font-size:13px">${s.desc}</div></div>`).join('');
+    }
+    renderList();
+
+    function activate(id){
+      document.querySelectorAll('.stage').forEach(el=>el.classList.remove('active'));
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.classList.add('active');
+      const s = STAGES.find(x=>x.id===id);
+      sideTitle.textContent = s.title;
+      sideDesc.textContent = s.desc;
+
+      // scroll details to top and highlight selected
+      detailsEl.querySelectorAll('div').forEach((d,i)=>{ d.style.opacity = STAGES[i].id===id? '1':'0.45'; d.style.transform = STAGES[i].id===id? 'translateX(0)':'translateX(0)'});
+    }
+
+    // click + keyboard handlers
+    document.querySelectorAll('.stage').forEach(el=>{
+      el.addEventListener('click', ()=> activate(el.id));
+      el.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') activate(el.id)});
+    });
+
+    document.getElementById('reset').addEventListener('click', ()=>{
+      document.querySelectorAll('.stage').forEach(el=>el.classList.remove('active'));
+      sideTitle.textContent = 'Select a stage';
+      sideDesc.textContent = 'Click any node in the diagram to read a concise explanation of that stage. You can also use keyboard (Tab + Enter) to select stages.';
+      detailsEl.querySelectorAll('div').forEach(d=>{ d.style.opacity='1' });
+    });
+
+    let flowInterval = null;
+    document.getElementById('highlight').addEventListener('click', ()=>{
+      if(flowInterval){ clearInterval(flowInterval); flowInterval = null; document.getElementById('highlight').textContent='Highlight Flow'; return }
+      let i=0; activate(STAGES[i].id);
+      flowInterval = setInterval(()=>{ i=(i+1)%STAGES.length; activate(STAGES[i].id); }, 1300);
+      document.getElementById('highlight').textContent='Stop Highlight';
+    });
+
+    // make first stage active by default
+    activate('plan');
+  </script>
 </body>
 </html>
-
